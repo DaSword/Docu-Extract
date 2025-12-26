@@ -190,10 +190,12 @@ export default function JobPage() {
     return (
       <div className="min-h-screen bg-background p-4">
         <Skeleton className="h-8 w-48 mb-4" />
-        <div className="grid lg:grid-cols-3 gap-4 h-[calc(100vh-8rem)]">
-          <Skeleton className="h-full" />
-          <Skeleton className="h-full" />
-          <Skeleton className="h-full" />
+        <div className="grid lg:grid-cols-12 gap-4 h-[calc(100vh-8rem)]">
+          <div className="lg:col-span-8 flex flex-col gap-4">
+            <Skeleton className="h-24" />
+            <Skeleton className="flex-1" />
+          </div>
+          <Skeleton className="lg:col-span-4 h-full" />
         </div>
       </div>
     );
@@ -246,46 +248,65 @@ export default function JobPage() {
         </div>
       </header>
 
-      <div className="grid lg:grid-cols-3 gap-4 p-4 h-[calc(100vh-4rem)]">
-        <Card className="flex flex-col overflow-hidden" data-testid="panel-documents">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <FileText className="w-5 h-5" />
-              Documents
-            </CardTitle>
-            <CardDescription>
-              Upload pay stubs, tax returns, bank statements
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
-            <label className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-muted/50 transition-colors">
-              <input
-                type="file"
-                className="hidden"
-                accept=".pdf,image/*"
-                multiple
-                onChange={handleFileChange}
-                disabled={isUploading}
-                data-testid="input-file-upload"
-              />
-              {isUploading ? (
-                <div className="space-y-2">
-                  <Loader2 className="w-8 h-8 mx-auto text-primary animate-spin" />
-                  <p className="text-sm text-muted-foreground">Uploading... {uploadProgress}%</p>
+      <div className="grid lg:grid-cols-12 gap-4 p-4 h-[calc(100vh-4rem)]">
+        <div className="lg:col-span-8 flex flex-col gap-4 overflow-hidden">
+          <Card className="flex-shrink-0" data-testid="panel-documents">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <FileText className="w-5 h-5" />
+                    Documents
+                  </CardTitle>
+                  <CardDescription>
+                    Upload pay stubs, tax returns, bank statements
+                  </CardDescription>
                 </div>
-              ) : (
-                <>
-                  <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-                  <p className="text-sm font-medium">Click to upload</p>
-                  <p className="text-xs text-muted-foreground">PDF or images</p>
-                </>
-              )}
-            </label>
+                <div className="flex items-center gap-2">
+                  {job.documents.length > 0 && job.status !== "processing" && (
+                    <Button
+                      onClick={() => processJobMutation.mutate()}
+                      disabled={processJobMutation.isPending}
+                      data-testid="button-process"
+                    >
+                      {processJobMutation.isPending ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Play className="w-4 h-4 mr-2" />
+                      )}
+                      Extract Data
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <label className="border-2 border-dashed rounded-lg px-4 py-3 text-center cursor-pointer hover:bg-muted/50 transition-colors flex items-center gap-2">
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept=".pdf,image/*"
+                    multiple
+                    onChange={handleFileChange}
+                    disabled={isUploading}
+                    data-testid="input-file-upload"
+                  />
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 text-primary animate-spin" />
+                      <span className="text-sm text-muted-foreground">Uploading... {uploadProgress}%</span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">Upload files</span>
+                    </>
+                  )}
+                </label>
 
-            <ScrollArea className="flex-1">
-              <div className="space-y-2">
                 {job.documents.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
+                  <p className="text-sm text-muted-foreground">
                     No documents uploaded yet
                   </p>
                 ) : (
@@ -295,27 +316,24 @@ export default function JobPage() {
                     return (
                       <div
                         key={doc.id}
-                        className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg"
+                        className="flex items-center gap-2 px-3 py-2 bg-muted/50 rounded-lg"
                         data-testid={`document-item-${doc.id}`}
                       >
-                        <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
+                        <div className="w-6 h-6 bg-muted rounded flex items-center justify-center">
                           {isImage ? (
-                            <Image className="w-4 h-4 text-muted-foreground" />
+                            <Image className="w-3 h-3 text-muted-foreground" />
                           ) : (
-                            <FileText className="w-4 h-4 text-muted-foreground" />
+                            <FileText className="w-3 h-3 text-muted-foreground" />
                           )}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{doc.filename}</p>
-                          <div className="flex items-center gap-2">
-                            <span className={`w-1.5 h-1.5 rounded-full ${docStatus.color}`} />
-                            <span className="text-xs text-muted-foreground">{docStatus.label}</span>
-                            {doc.documentType && (
-                              <Badge variant="secondary" className="text-xs">
-                                {doc.documentType}
-                              </Badge>
-                            )}
-                          </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium truncate max-w-32">{doc.filename}</span>
+                          <span className={`w-1.5 h-1.5 rounded-full ${docStatus.color}`} />
+                          {doc.documentType && (
+                            <Badge variant="secondary" className="text-xs">
+                              {doc.documentType}
+                            </Badge>
+                          )}
                         </div>
                         <Button
                           variant="ghost"
@@ -330,37 +348,20 @@ export default function JobPage() {
                   })
                 )}
               </div>
-            </ScrollArea>
 
-            {job.documents.length > 0 && job.status !== "processing" && (
-              <Button
-                onClick={() => processJobMutation.mutate()}
-                disabled={processJobMutation.isPending}
-                className="w-full"
-                data-testid="button-process"
-              >
-                {processJobMutation.isPending ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <Play className="w-4 h-4 mr-2" />
-                )}
-                Extract Data
-              </Button>
-            )}
-
-            {job.status === "processing" && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Processing...</span>
-                  <span>{processingProgress}%</span>
+              {job.status === "processing" && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Processing...</span>
+                    <span>{processingProgress}%</span>
+                  </div>
+                  <Progress value={processingProgress} />
                 </div>
-                <Progress value={processingProgress} />
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
+            </CardContent>
+          </Card>
 
-        <Card className="flex flex-col overflow-hidden" data-testid="panel-form">
+          <Card className="flex flex-col flex-1 overflow-hidden" data-testid="panel-form">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between gap-2">
               <div>
@@ -459,8 +460,9 @@ export default function JobPage() {
             </ScrollArea>
           </CardContent>
         </Card>
+        </div>
 
-        <Card className="flex flex-col overflow-hidden" data-testid="panel-chat">
+        <Card className="lg:col-span-4 flex flex-col overflow-hidden" data-testid="panel-chat">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
               <Bot className="w-5 h-5" />
