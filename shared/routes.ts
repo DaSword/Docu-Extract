@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-// Error schemas
 export const errorSchemas = {
   validation: z.object({
     message: z.string(),
@@ -17,7 +16,6 @@ export const errorSchemas = {
   }),
 };
 
-// API contract
 export const api = {
   jobs: {
     list: {
@@ -42,7 +40,6 @@ export const api = {
       path: "/api/jobs",
       input: z.object({
         name: z.string().min(1),
-        targetFormType: z.string().min(1),
       }),
       responses: {
         201: z.any(),
@@ -150,7 +147,6 @@ export const api = {
   },
 };
 
-// URL builder helper
 export function buildUrl(path: string, params?: Record<string, string | number>): string {
   let url = path;
   if (params) {
@@ -163,7 +159,6 @@ export function buildUrl(path: string, params?: Record<string, string | number>)
   return url;
 }
 
-// Type exports
 export type CreateJobInput = z.infer<typeof api.jobs.create.input>;
 export type AddDocumentInput = z.infer<typeof api.documents.add.input>;
 export type SendMessageInput = z.infer<typeof api.messages.send.input>;

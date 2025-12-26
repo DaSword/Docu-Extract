@@ -302,5 +302,76 @@ export async function registerRoutes(
     }
   });
 
+  // Generate filled PDF
+  app.post("/api/jobs/:id/generate-pdf", isAuthenticated, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      const job = await storage.getJob(id);
+      if (!job || job.userId !== req.user.claims.sub) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      if (!job.extractedData || Object.keys(job.extractedData).length === 0) {
+        return res.status(400).json({ message: "No form data to generate PDF from" });
+      }
+
+      const fs = await import("fs");
+      const templatePath = "attached_assets/Financial_statement_TEMPLATE.pdf";
+      
+      if (!fs.existsSync(templatePath)) {
+        return res.status(400).json({ 
+          message: "PDF template not found. Please upload the Massachusetts Court Financial Statement PDF template to the attached_assets folder as 'Financial_statement_TEMPLATE.pdf'" 
+        });
+      }
+
+      const { generateFilledPdf } = await import("./pdfGenerator");
+      const outputPath = `/tmp/filled_statement_${id}_${Date.now()}.pdf`;
+      
+      const result = await generateFilledPdf(templatePath, outputPath, job.extractedData);
+      
+      if (!result.success) {
+        return res.status(500).json({ message: result.error || "Failed to generate PDF" });
+      }
+      
+      await storage.updateJob(id, { pdfOutputPath: result.outputPath });
+      
+      res.json({ success: true, pdfPath: result.outputPath });
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      res.status(500).json({ message: "Failed to generate PDF" });
+    }
+  });
+
+  // Download generated PDF
+  app.get("/api/jobs/:id/download-pdf", isAuthenticated, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      const job = await storage.getJob(id);
+      if (!job || job.userId !== req.user.claims.sub) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      if (!job.pdfOutputPath) {
+        return res.status(404).json({ message: "No PDF generated yet" });
+      }
+      
+      const fs = await import("fs");
+      if (!fs.existsSync(job.pdfOutputPath)) {
+        return res.status(404).json({ message: "PDF file not found" });
+      }
+      
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `attachment; filename="${job.name.replace(/[^a-zA-Z0-9]/g, '_')}_financial_statement.pdf"`);
+      
+      const fileStream = fs.createReadStream(job.pdfOutputPath);
+      fileStream.pipe(res);
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      res.status(500).json({ message: "Failed to download PDF" });
+    }
+  });
+
   return httpServer;
 }

@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -31,14 +30,13 @@ export default function HomePage() {
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newJobName, setNewJobName] = useState("");
-  const [newJobType, setNewJobType] = useState("invoice");
 
   const { data: jobs, isLoading: jobsLoading } = useQuery<ExtractionJob[]>({
     queryKey: [api.jobs.list.path],
   });
 
   const createJobMutation = useMutation({
-    mutationFn: async (data: { name: string; targetFormType: string }) => {
+    mutationFn: async (data: { name: string }) => {
       const res = await apiRequest("POST", api.jobs.create.path, data);
       return res.json();
     },
@@ -65,7 +63,7 @@ export default function HomePage() {
 
   const handleCreateJob = () => {
     if (!newJobName.trim()) return;
-    createJobMutation.mutate({ name: newJobName, targetFormType: newJobType });
+    createJobMutation.mutate({ name: newJobName });
   };
 
   if (authLoading) {
@@ -80,7 +78,10 @@ export default function HomePage() {
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-4">
-          <h1 className="text-xl font-semibold" data-testid="text-app-title">Document Intelligence</h1>
+          <div>
+            <h1 className="text-xl font-semibold" data-testid="text-app-title">Financial Statement Filler</h1>
+            <p className="text-xs text-muted-foreground">Massachusetts Court Form Assistant</p>
+          </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <Avatar className="w-8 h-8">
@@ -99,50 +100,37 @@ export default function HomePage() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between gap-4 mb-8">
           <div>
-            <h2 className="text-2xl font-bold" data-testid="text-page-title">Your Extraction Jobs</h2>
-            <p className="text-muted-foreground">Create and manage document extraction projects</p>
+            <h2 className="text-2xl font-bold" data-testid="text-page-title">Your Financial Statements</h2>
+            <p className="text-muted-foreground">Upload documents to auto-fill the court form</p>
           </div>
           
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button data-testid="button-new-job">
                 <Plus className="w-4 h-4 mr-2" />
-                New Job
+                New Statement
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Create Extraction Job</DialogTitle>
+                <DialogTitle>Create Financial Statement</DialogTitle>
                 <DialogDescription>
-                  Set up a new document extraction project
+                  Start a new Massachusetts Court Financial Statement
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 mt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="job-name">Job Name</Label>
+                  <Label htmlFor="job-name">Name (e.g., "2024 Divorce Filing")</Label>
                   <Input
                     id="job-name"
-                    placeholder="e.g., Q4 Invoices"
+                    placeholder="Enter a name for this statement"
                     value={newJobName}
                     onChange={(e) => setNewJobName(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleCreateJob()}
                     data-testid="input-job-name"
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="form-type">Form Type</Label>
-                  <Select value={newJobType} onValueChange={setNewJobType}>
-                    <SelectTrigger id="form-type" data-testid="select-form-type">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="invoice">Invoice</SelectItem>
-                      <SelectItem value="contract">Contract</SelectItem>
-                      <SelectItem value="receipt">Receipt</SelectItem>
-                      <SelectItem value="custom">Custom</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
                 <Button
                   className="w-full"
@@ -153,7 +141,7 @@ export default function HomePage() {
                   {createJobMutation.isPending ? (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   ) : null}
-                  Create Job
+                  Create Statement
                 </Button>
               </div>
             </DialogContent>
@@ -190,7 +178,7 @@ export default function HomePage() {
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
                         <CardTitle className="text-lg truncate">{job.name}</CardTitle>
-                        <CardDescription className="capitalize">{job.targetFormType}</CardDescription>
+                        <CardDescription>Financial Statement</CardDescription>
                       </div>
                       <Button
                         variant="ghost"
@@ -222,13 +210,13 @@ export default function HomePage() {
           <Card className="text-center py-12" data-testid="card-empty-state">
             <CardContent>
               <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-2">No extraction jobs yet</h3>
+              <h3 className="text-lg font-medium mb-2">No financial statements yet</h3>
               <p className="text-muted-foreground mb-4">
-                Create your first job to start extracting data from documents
+                Create your first statement and upload supporting documents
               </p>
               <Button onClick={() => setDialogOpen(true)} data-testid="button-create-first-job">
                 <Plus className="w-4 h-4 mr-2" />
-                Create Your First Job
+                Create Your First Statement
               </Button>
             </CardContent>
           </Card>
