@@ -317,11 +317,11 @@ export async function registerRoutes(
       }
 
       const fs = await import("fs");
-      const templatePath = "attached_assets/Financial_statement_TEMPLATE.pdf";
+      const templatePath = "attached_assets/Financial statement TEMPLATE.pdf";
       
       if (!fs.existsSync(templatePath)) {
         return res.status(400).json({ 
-          message: "PDF template not found. Please upload the Massachusetts Court Financial Statement PDF template to the attached_assets folder as 'Financial_statement_TEMPLATE.pdf'" 
+          message: "PDF template not found. Please upload the Massachusetts Court Financial Statement PDF template to the attached_assets folder as 'Financial statement TEMPLATE.pdf'" 
         });
       }
 
