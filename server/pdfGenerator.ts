@@ -1,7 +1,11 @@
 import { spawn } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
+import { fileURLToPath } from "url";
 import { financialStatementSchema } from "@shared/schema";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export interface GeneratePdfResult {
   success: boolean;
@@ -31,7 +35,7 @@ export async function generateFilledPdf(
   };
 
   const tempDataPath = path.join("/tmp", `form_data_${Date.now()}.json`);
-  
+
   try {
     fs.writeFileSync(tempDataPath, JSON.stringify(inputData, null, 2));
 
@@ -59,7 +63,7 @@ export async function generateFilledPdf(
       python.on("close", (code) => {
         try {
           fs.unlinkSync(tempDataPath);
-        } catch (e) {}
+        } catch (e) { }
 
         if (code !== 0) {
           resolve({
@@ -86,8 +90,8 @@ export async function generateFilledPdf(
   } catch (error) {
     try {
       fs.unlinkSync(tempDataPath);
-    } catch (e) {}
-    
+    } catch (e) { }
+
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
