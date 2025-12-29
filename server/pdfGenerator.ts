@@ -1,11 +1,7 @@
 import { spawn } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
-import { fileURLToPath } from "url";
 import { financialStatementSchema } from "@shared/schema";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 export interface GeneratePdfResult {
   success: boolean;
@@ -39,7 +35,7 @@ export async function generateFilledPdf(
   try {
     fs.writeFileSync(tempDataPath, JSON.stringify(inputData, null, 2));
 
-    const scriptPath = path.join(__dirname, "fill_form.py");
+    const scriptPath = path.join(process.cwd(), "server", "fill_form.py");
 
     return new Promise((resolve) => {
       const python = spawn("python3", [
